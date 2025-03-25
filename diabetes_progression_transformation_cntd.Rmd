@@ -36,7 +36,7 @@ other_diagnoses_data <- diabetes_full %>%
   mutate(status = 1) %>%
   pivot_wider(names_from = CCSR_CATEGORY_DESCRIPTION, values_from = status)
 
-other_diagnoses_data
+head(other_diagnoses_data)
 ```
 
 ```{r}
@@ -49,7 +49,7 @@ diabetes_only_data <- diabetes_full %>%
   select(-CCSR_CATEGORY_DESCRIPTION) %>%
   arrange(desc(BENE_ID), TIME_SINCE_ENROLLMT) 
 
-diabetes_only_data
+head(diabetes_only_data)
 ```
 
 
@@ -64,7 +64,7 @@ diabetes_transformed <- full_join(
   mutate(STATE = ifelse(is.na(STATE), 0, STATE)) %>%
   arrange(desc(BENE_ID), TIME_SINCE_ENROLLMT)
 
-diabetes_transformed
+head(diabetes_transformed)
 ```
 
 
@@ -130,7 +130,7 @@ enrollment_diab <- read.csv("/Users/benabijah/Downloads/enrollment_diab.csv", he
 diabetes_transformed <- left_join(
   diabetes_transformed, enrollment_diab, by = c("BENE_ID"))
 
-diabetes_transformed
+head(diabetes_transformed)
 ```
 
 
