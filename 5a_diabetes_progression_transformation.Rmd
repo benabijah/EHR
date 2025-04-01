@@ -119,6 +119,10 @@ update_diagnoses_iteratively <- function(data, cols) {
 }
 
 diabetes_transformed <- update_diagnoses_iteratively(diabetes_transformed, other_diagnoses)
+
+# filter out TIME=0
+diabetes_transformed <- diabetes_transformed %>% filter(TIME != 0)
+
 head(diabetes_transformed, 10)
 ```
 
