@@ -11,9 +11,9 @@
 
 <meta name="author" content />
 
-<meta name="date" content="2025-04-01" />
+<meta name="date" content="2025-04-06" />
 
-<title>5a_diabetes_progression_transformation.knit</title>
+<title>Transform Data</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,18 +350,19 @@ display: none;
 
 
 
+<h1 class="title toc-ignore">Transform Data</h1>
+<h4 class="author"></h4>
+<h4 class="date">2025-04-06</h4>
 
 </div>
 
 
 <pre class="r"><code>diabetes_full &lt;- read.csv(&quot;/Users/benabijah/Downloads/diabetes_cohort.csv&quot;, header = T) %&gt;%
-  mutate(BENE_ID = as.character(BENE_ID),
-         CCSR_CATEGORY_DESCRIPTION = gsub(&quot;[/ \\-]&quot;, &quot;.&quot;, CCSR_CATEGORY_DESCRIPTION_updated),
-         TIME = TIME_SINCE_ENROLLMT) %&gt;%
-  select(-c(CCSR_CATEGORY_DESCRIPTION_updated, YR, TIME_SINCE_ENROLLMT))
+  mutate(BENE_ID = as.character(BENE_ID)) %&gt;%
+  select(-c(MONTH, YR))
 
 # define the list of other diagnoses
-diab_names &lt;- c(&quot;Prediabetes&quot;,&quot;Diabetes.mellitus.without.complication&quot;,&quot;Diabetes.mellitus.with.complication&quot;)
+diab_names &lt;- c(&quot;Prediabetes&quot;,&quot;Diabetes mellitus without complication&quot;,&quot;Diabetes mellitus with complication&quot;)
 
 other_diagnoses &lt;- unique(diabetes_full$CCSR_CATEGORY_DESCRIPTION[
   !(diabetes_full$CCSR_CATEGORY_DESCRIPTION %in% diab_names)])</code></pre>
@@ -369,67 +370,81 @@ other_diagnoses &lt;- unique(diabetes_full$CCSR_CATEGORY_DESCRIPTION[
 other_diagnoses_data &lt;- diabetes_full %&gt;%
   filter(CCSR_CATEGORY_DESCRIPTION %in% other_diagnoses) %&gt;%
   mutate(status = 1) %&gt;%
+  select(-STATE) %&gt;%
   pivot_wider(names_from = CCSR_CATEGORY_DESCRIPTION, values_from = status)
 
 head(other_diagnoses_data)</code></pre>
 <pre><code>## # A tibble: 6 × 9
-##   BENE_ID          TIME Obesity Socioeconomic.or.lifest…¹ Heart.disease.or.fai…²
-##   &lt;chr&gt;           &lt;int&gt;   &lt;dbl&gt;                     &lt;dbl&gt;                  &lt;dbl&gt;
-## 1 -10000010288010     5       1                        NA                     NA
-## 2 -10000010288010    10      NA                         1                     NA
-## 3 -10000010287943     2      NA                        NA                      1
-## 4 -10000010287943     3       1                        NA                     NA
-## 5 -10000010287943     8      NA                         1                     NA
-## 6 -10000010287943    30      NA                        NA                     NA
-## # ℹ abbreviated names: ¹​Socioeconomic.or.lifestyle.factors,
-## #   ²​Heart.disease.or.failure
-## # ℹ 4 more variables: Hypertension &lt;dbl&gt;, Sleep.wake.disorders &lt;dbl&gt;,
-## #   Depressive.or.anxiety.disorders &lt;dbl&gt;, Alcohol.related.disorders &lt;dbl&gt;</code></pre>
+##   BENE_ID         TIME_SINCE_PREDIAB Obesity Socioeconomic or lif…¹ Hypertension
+##   &lt;chr&gt;                        &lt;int&gt;   &lt;dbl&gt;                  &lt;dbl&gt;        &lt;dbl&gt;
+## 1 -10000010288010                 -6       1                     NA           NA
+## 2 -10000010288010                 -1      NA                      1           NA
+## 3 -10000010288009                 -9      NA                     NA            1
+## 4 -10000010288009                 -2       1                      1           NA
+## 5 -10000010287992                  1       1                      1           NA
+## 6 -10000010287992                  2      NA                     NA           NA
+## # ℹ abbreviated name: ¹​`Socioeconomic or lifestyle factors`
+## # ℹ 4 more variables: `Heart disease or failure` &lt;dbl&gt;,
+## #   `Sleep wake disorders` &lt;dbl&gt;, `Alcohol-related disorders` &lt;dbl&gt;,
+## #   `Depressive or anxiety disorders` &lt;dbl&gt;</code></pre>
 <pre class="r"><code># get data for all diabetes diagnoses
 diabetes_only_data &lt;- diabetes_full %&gt;%
   filter(CCSR_CATEGORY_DESCRIPTION %in% diab_names) %&gt;%
-  mutate(STATE = case_when(CCSR_CATEGORY_DESCRIPTION == &quot;Prediabetes&quot; ~ 1,
-                           CCSR_CATEGORY_DESCRIPTION == &quot;Diabetes.mellitus.without.complication&quot; ~ 2,
-                           CCSR_CATEGORY_DESCRIPTION == &quot;Diabetes.mellitus.with.complication&quot; ~ 3)) %&gt;%
+  mutate(STATE = case_when(
+    CCSR_CATEGORY_DESCRIPTION == &quot;Prediabetes&quot; ~ 1,
+    CCSR_CATEGORY_DESCRIPTION == &quot;Diabetes mellitus without complication&quot; ~ 2,
+    CCSR_CATEGORY_DESCRIPTION == &quot;Diabetes mellitus with complication&quot; ~ 3)) %&gt;%
   select(-CCSR_CATEGORY_DESCRIPTION) %&gt;%
-  arrange(desc(BENE_ID), TIME) 
+  arrange(desc(BENE_ID), TIME_SINCE_PREDIAB) 
 
 head(diabetes_only_data)</code></pre>
-<pre><code>##           BENE_ID TIME STATE
-## 1 -10000010288010   11     1
-## 2 -10000010287943    6     1
-## 3 -10000010287943   61     3
-## 4 -10000010287939    6     1
-## 5 -10000010287906    5     1
-## 6 -10000010287882    5     1</code></pre>
+<pre><code>##           BENE_ID STATE TIME_SINCE_PREDIAB
+## 1 -10000010288010     1                  0
+## 2 -10000010288009     1                  0
+## 3 -10000010287992     1                  0
+## 4 -10000010287992     2                  1
+## 5 -10000010287983     1                  0
+## 6 -10000010287939     1                  0</code></pre>
 <pre class="r"><code>diabetes_transformed &lt;- full_join(
-  diabetes_only_data, other_diagnoses_data, by = c(&quot;BENE_ID&quot;,&quot;TIME&quot;)) %&gt;%
-  group_by(BENE_ID) %&gt;%
-  summarise(new_rows = list(bind_rows(tibble(TIME = 0), cur_data()))) %&gt;%
-  unnest(new_rows) %&gt;%
-  ungroup() %&gt;%
+  diabetes_only_data, other_diagnoses_data, by = c(&quot;BENE_ID&quot;,&quot;TIME_SINCE_PREDIAB&quot;)) %&gt;%
   mutate(STATE = ifelse(is.na(STATE), 0, STATE)) %&gt;%
-  arrange(desc(BENE_ID), TIME)
+  arrange(desc(BENE_ID), TIME_SINCE_PREDIAB)
 
 head(diabetes_transformed)</code></pre>
-<pre><code>## # A tibble: 6 × 10
-##   BENE_ID       TIME STATE Obesity Socioeconomic.or.lif…¹ Heart.disease.or.fai…²
-##   &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;                  &lt;dbl&gt;                  &lt;dbl&gt;
-## 1 -1000001028…     0     0      NA                     NA                     NA
-## 2 -1000001028…     5     0       1                     NA                     NA
-## 3 -1000001028…    10     0      NA                      1                     NA
-## 4 -1000001028…    11     1      NA                     NA                     NA
-## 5 -1000001028…     0     0      NA                     NA                     NA
-## 6 -1000001028…     2     0      NA                     NA                      1
-## # ℹ abbreviated names: ¹​Socioeconomic.or.lifestyle.factors,
-## #   ²​Heart.disease.or.failure
-## # ℹ 4 more variables: Hypertension &lt;dbl&gt;, Sleep.wake.disorders &lt;dbl&gt;,
-## #   Depressive.or.anxiety.disorders &lt;dbl&gt;, Alcohol.related.disorders &lt;dbl&gt;</code></pre>
+<pre><code>##           BENE_ID STATE TIME_SINCE_PREDIAB Obesity
+## 1 -10000010288010     0                 -6       1
+## 2 -10000010288010     0                 -1      NA
+## 3 -10000010288010     1                  0      NA
+## 4 -10000010288009     0                 -9      NA
+## 5 -10000010288009     0                 -2       1
+## 6 -10000010288009     1                  0      NA
+##   Socioeconomic or lifestyle factors Hypertension Heart disease or failure
+## 1                                 NA           NA                       NA
+## 2                                  1           NA                       NA
+## 3                                 NA           NA                       NA
+## 4                                 NA            1                       NA
+## 5                                  1           NA                        1
+## 6                                 NA           NA                       NA
+##   Sleep wake disorders Alcohol-related disorders
+## 1                   NA                        NA
+## 2                   NA                        NA
+## 3                   NA                        NA
+## 4                   NA                        NA
+## 5                   NA                        NA
+## 6                   NA                        NA
+##   Depressive or anxiety disorders
+## 1                              NA
+## 2                              NA
+## 3                              NA
+## 4                              NA
+## 5                              NA
+## 6                              NA</code></pre>
 <pre class="r"><code>nrow(diabetes_transformed)</code></pre>
-<pre><code>## [1] 9018</code></pre>
-<pre class="r"><code>update_state_iteratively &lt;- function(data) {
+<pre><code>## [1] 11688</code></pre>
+<pre class="r"><code># now let&#39;s update the STATE column...
+update_state_iteratively &lt;- function(data) {
   repeat {
-    # store previous state values to check for convergence
+    # store previous state values 
     prev_state &lt;- data$STATE
     
     # update STATE iteratively for second to last rows
@@ -447,26 +462,27 @@ head(diabetes_transformed)</code></pre>
 diabetes_transformed &lt;- update_state_iteratively(diabetes_transformed)
 head(diabetes_transformed, 10)</code></pre>
 <pre><code>## # A tibble: 10 × 10
-##    BENE_ID      TIME STATE Obesity Socioeconomic.or.lif…¹ Heart.disease.or.fai…²
-##    &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;                  &lt;dbl&gt;                  &lt;dbl&gt;
-##  1 -100000102…     0     0      NA                     NA                     NA
-##  2 -100000102…     5     0       1                     NA                     NA
-##  3 -100000102…    10     0      NA                      1                     NA
-##  4 -100000102…    11     1      NA                     NA                     NA
-##  5 -100000102…     0     0      NA                     NA                     NA
-##  6 -100000102…     2     0      NA                     NA                      1
-##  7 -100000102…     3     0       1                     NA                     NA
-##  8 -100000102…     6     1      NA                     NA                     NA
-##  9 -100000102…     8     1      NA                      1                     NA
-## 10 -100000102…    30     1      NA                     NA                     NA
-## # ℹ abbreviated names: ¹​Socioeconomic.or.lifestyle.factors,
-## #   ²​Heart.disease.or.failure
-## # ℹ 4 more variables: Hypertension &lt;dbl&gt;, Sleep.wake.disorders &lt;dbl&gt;,
-## #   Depressive.or.anxiety.disorders &lt;dbl&gt;, Alcohol.related.disorders &lt;dbl&gt;</code></pre>
-<pre class="r"><code>update_diagnoses_iteratively &lt;- function(data, cols) {
+##    BENE_ID  STATE TIME_SINCE_PREDIAB Obesity Socioeconomic or lif…¹ Hypertension
+##    &lt;chr&gt;    &lt;dbl&gt;              &lt;int&gt;   &lt;dbl&gt;                  &lt;dbl&gt;        &lt;dbl&gt;
+##  1 -100000…     0                 -6       1                     NA           NA
+##  2 -100000…     0                 -1      NA                      1           NA
+##  3 -100000…     1                  0      NA                     NA           NA
+##  4 -100000…     0                 -9      NA                     NA            1
+##  5 -100000…     0                 -2       1                      1           NA
+##  6 -100000…     1                  0      NA                     NA           NA
+##  7 -100000…     1                  0      NA                     NA           NA
+##  8 -100000…     2                  1       1                      1           NA
+##  9 -100000…     2                  2      NA                     NA           NA
+## 10 -100000…     2                  8      NA                     NA            1
+## # ℹ abbreviated name: ¹​`Socioeconomic or lifestyle factors`
+## # ℹ 4 more variables: `Heart disease or failure` &lt;dbl&gt;,
+## #   `Sleep wake disorders` &lt;dbl&gt;, `Alcohol-related disorders` &lt;dbl&gt;,
+## #   `Depressive or anxiety disorders` &lt;dbl&gt;</code></pre>
+<pre class="r"><code># update comorbodities
+update_diagnoses_iteratively &lt;- function(data, cols) {
   data &lt;- data %&gt;%
     group_by(BENE_ID) %&gt;%
-    mutate(across(all_of(cols), ~ replace(.x, row_number() == 1, 0))) %&gt;% # Set first row to 0
+    mutate(across(all_of(cols), ~ ifelse(row_number() == 1 &amp; is.na(.x), 0, .x))) %&gt;% # set first row to 0, if NA
     ungroup()
   
   repeat {
@@ -487,27 +503,26 @@ head(diabetes_transformed, 10)</code></pre>
 
 diabetes_transformed &lt;- update_diagnoses_iteratively(diabetes_transformed, other_diagnoses)
 
-# filter out TIME=0
-diabetes_transformed &lt;- diabetes_transformed %&gt;% filter(TIME != 0)
-
+# filter out STATE=0
+diabetes_transformed &lt;- diabetes_transformed %&gt;% filter(STATE != 0)
 head(diabetes_transformed, 10)</code></pre>
 <pre><code>## # A tibble: 10 × 10
-##    BENE_ID      TIME STATE Obesity Socioeconomic.or.lif…¹ Heart.disease.or.fai…²
-##    &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;                  &lt;dbl&gt;                  &lt;dbl&gt;
-##  1 -100000102…     5     0       1                      0                      0
-##  2 -100000102…    10     0       1                      1                      0
-##  3 -100000102…    11     1       1                      1                      0
-##  4 -100000102…     2     0       0                      0                      1
-##  5 -100000102…     3     0       1                      0                      1
-##  6 -100000102…     6     1       1                      0                      1
-##  7 -100000102…     8     1       1                      1                      1
-##  8 -100000102…    30     1       1                      1                      1
-##  9 -100000102…    61     3       1                      1                      1
-## 10 -100000102…     1     0       0                      1                      0
-## # ℹ abbreviated names: ¹​Socioeconomic.or.lifestyle.factors,
-## #   ²​Heart.disease.or.failure
-## # ℹ 4 more variables: Hypertension &lt;dbl&gt;, Sleep.wake.disorders &lt;dbl&gt;,
-## #   Depressive.or.anxiety.disorders &lt;dbl&gt;, Alcohol.related.disorders &lt;dbl&gt;</code></pre>
+##    BENE_ID  STATE TIME_SINCE_PREDIAB Obesity Socioeconomic or lif…¹ Hypertension
+##    &lt;chr&gt;    &lt;dbl&gt;              &lt;int&gt;   &lt;dbl&gt;                  &lt;dbl&gt;        &lt;dbl&gt;
+##  1 -100000…     1                  0       1                      1            0
+##  2 -100000…     1                  0       1                      1            1
+##  3 -100000…     1                  0       0                      0            0
+##  4 -100000…     2                  1       1                      1            0
+##  5 -100000…     2                  2       1                      1            0
+##  6 -100000…     2                  8       1                      1            1
+##  7 -100000…     2                 10       1                      1            1
+##  8 -100000…     1                  0       0                      0            0
+##  9 -100000…     1                  6       0                      0            0
+## 10 -100000…     1                  7       1                      1            0
+## # ℹ abbreviated name: ¹​`Socioeconomic or lifestyle factors`
+## # ℹ 4 more variables: `Heart disease or failure` &lt;dbl&gt;,
+## #   `Sleep wake disorders` &lt;dbl&gt;, `Alcohol-related disorders` &lt;dbl&gt;,
+## #   `Depressive or anxiety disorders` &lt;dbl&gt;</code></pre>
 <pre class="r"><code># merge with data from enrollment file
 enrollment_diab &lt;- read.csv(&quot;/Users/benabijah/Downloads/enrollment_cohort.csv&quot;, header = T) %&gt;%
   mutate(BENE_ID = as.character(BENE_ID))
@@ -515,23 +530,23 @@ enrollment_diab &lt;- read.csv(&quot;/Users/benabijah/Downloads/enrollment_cohor
 diabetes_transformed &lt;- left_join(diabetes_transformed, enrollment_diab, by = c(&quot;BENE_ID&quot;))
 head(diabetes_transformed, 10)</code></pre>
 <pre><code>## # A tibble: 10 × 14
-##    BENE_ID      TIME STATE Obesity Socioeconomic.or.lif…¹ Heart.disease.or.fai…²
-##    &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;                  &lt;dbl&gt;                  &lt;dbl&gt;
-##  1 -100000102…     5     0       1                      0                      0
-##  2 -100000102…    10     0       1                      1                      0
-##  3 -100000102…    11     1       1                      1                      0
-##  4 -100000102…     2     0       0                      0                      1
-##  5 -100000102…     3     0       1                      0                      1
-##  6 -100000102…     6     1       1                      0                      1
-##  7 -100000102…     8     1       1                      1                      1
-##  8 -100000102…    30     1       1                      1                      1
-##  9 -100000102…    61     3       1                      1                      1
-## 10 -100000102…     1     0       0                      1                      0
-## # ℹ abbreviated names: ¹​Socioeconomic.or.lifestyle.factors,
-## #   ²​Heart.disease.or.failure
-## # ℹ 8 more variables: Hypertension &lt;dbl&gt;, Sleep.wake.disorders &lt;dbl&gt;,
-## #   Depressive.or.anxiety.disorders &lt;dbl&gt;, Alcohol.related.disorders &lt;dbl&gt;,
-## #   SEX_IDENT_CD &lt;int&gt;, BENE_RACE_CD &lt;int&gt;, AGE_CALC &lt;int&gt;, AGE_GRP &lt;chr&gt;</code></pre>
+##    BENE_ID  STATE TIME_SINCE_PREDIAB Obesity Socioeconomic or lif…¹ Hypertension
+##    &lt;chr&gt;    &lt;dbl&gt;              &lt;int&gt;   &lt;dbl&gt;                  &lt;dbl&gt;        &lt;dbl&gt;
+##  1 -100000…     1                  0       1                      1            0
+##  2 -100000…     1                  0       1                      1            1
+##  3 -100000…     1                  0       0                      0            0
+##  4 -100000…     2                  1       1                      1            0
+##  5 -100000…     2                  2       1                      1            0
+##  6 -100000…     2                  8       1                      1            1
+##  7 -100000…     2                 10       1                      1            1
+##  8 -100000…     1                  0       0                      0            0
+##  9 -100000…     1                  6       0                      0            0
+## 10 -100000…     1                  7       1                      1            0
+## # ℹ abbreviated name: ¹​`Socioeconomic or lifestyle factors`
+## # ℹ 8 more variables: `Heart disease or failure` &lt;dbl&gt;,
+## #   `Sleep wake disorders` &lt;dbl&gt;, `Alcohol-related disorders` &lt;dbl&gt;,
+## #   `Depressive or anxiety disorders` &lt;dbl&gt;, SEX_IDENT_CD &lt;int&gt;,
+## #   BENE_RACE_CD &lt;int&gt;, AGE_CALC &lt;int&gt;, AGE_GRP &lt;chr&gt;</code></pre>
 <pre class="r"><code>write.csv(diabetes_transformed, &quot;~/Library/CloudStorage/Dropbox/Projects/EHR/diab_cohort.csv&quot;, row.names = FALSE)
 saveRDS(diabetes_transformed, file=&quot;~/Library/CloudStorage/Dropbox/Projects/EHR/diab_cohort&quot;)</code></pre>
 
