@@ -8,7 +8,7 @@ all the way through analyses. Using synthetic healthcare claims data obtained fr
 [Centers for Medicare & and Medicaid Services](https://data.cms.gov/collection/synthetic-medicare-enrollment-fee-for-service-claims-and-prescription-drug-event), 
 we track beneficiaries' progression from being diagnosed with prediabetes to diabetes mellitus with/without complications. 
 To do this, we use the assistance of AI tools for the ingestion of our data, and then proceed with statistical 
-modeling to help us understand the dynamics involved in diabetes disease progression. (See [Abstract](#abstract))
+modeling to help us understand the dynamics involved in diabetes disease progression. (See [Abstract](#5-abstract))
 
 
 ## 1. Why Diabetes Progresson?
@@ -46,7 +46,7 @@ a beneficiary may not have hypertension at the time of prediabetes diagnoses, bu
 say, 5 months later even when they are still in the prediabetes state or had advanced to a higher state.
 
 
-## 5. Abstract {#abstract}
+## 5. Abstract
 Diabetes is a chronic disease that often progresses from a mild stage to a more complicated one, and eventually 
 to other chronic diseases like stroke or kidney failure. Understanding the various driving factors of this 
 progression is an important step towards policy implementation to mitigate its effects. In this study, we employ a 
