@@ -8,7 +8,7 @@ all the way through analyses. Using synthetic healthcare claims data obtained fr
 [Centers for Medicare & and Medicaid Services](https://data.cms.gov/collection/synthetic-medicare-enrollment-fee-for-service-claims-and-prescription-drug-event), 
 we track beneficiaries' progression from being diagnosed with prediabetes to diabetes mellitus with/without complications. 
 To do this, we use the assistance of AI tools for the ingestion of our data, and then proceed with statistical 
-modeling to help us understand the dynamics involved in diabetes disease progression. (See [Abstract](#1.5-abstract))
+modeling to help us understand the dynamics involved in diabetes disease progression. (See [Abstract](#1-abstract))
 
 
 ## 1.1 Why Diabetes Progresson?
