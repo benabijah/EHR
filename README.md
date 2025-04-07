@@ -2,6 +2,14 @@
 Diabetes Progression in Electronic Health Records
 
 
+## Content
+[0. Teaser](#0-teaser)
+[1. Why Diabetes Progresson?](#1-why-diabetes-progresson?)
+[2. Cohort](#2-cohort)
+[3. Time of Event](#3-time-of-event)
+[4. Comorbidities](#4-comorbidities)
+[5. Abstract](#5-abstract)
+
 ## 0. Teaser
 The primary goal of this "mini" project is to explore handling electronic health records -- from data ingestion
 all the way through analyses. Using synthetic healthcare claims data obtained from the 
