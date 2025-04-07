@@ -10,6 +10,7 @@ Diabetes Progression in Electronic Health Records
 - [4. Comorbidities](#4-comorbidities)
 - [5. Abstract](#5-abstract)
 
+
 ## 0. Teaser
 The primary goal of this "mini" project is to explore handling electronic health records -- from data ingestion
 all the way through analyses. Using synthetic healthcare claims data obtained from the 
@@ -21,8 +22,8 @@ modeling to help us understand the dynamics involved in diabetes disease progres
 
 ## 1. Why Diabetes Progresson?
 Diabetes as a chronic disease often progresses if unattended to. For any given population, if we can estimate the
-risks involved at every stage of the progression, as well as identify the various factors that drive these risks,
-then we can formulate targeted interventions geared toward preventing diabetes progression or delaying the rate 
+risks involved at every stage of the progression -- as well as identify the various factors that drive these risks --
+then we can formulate targeted interventions geared toward preventing its progression or, possibly, delaying the rate 
 of progression. 
 
 Motivated by [Li et al., 2024](https://pubmed.ncbi.nlm.nih.gov/39345707/) and 
@@ -37,21 +38,23 @@ This project only considers Medicare beneficiaries diagnosed with prediabetes in
 2025 for subsequent diagnoses of higher stages of diabetes. Furthermore, we only include beneficiaries who 
 progressed from a lower state to higher ones, without any regression at any point during the followup period.
 
-For example, we exclude a beneficiary with observed states, say, `1,2,1` because they regressed from state `2` to 
+For example, we exclude beneficiaries with observed states, say, `1,2,1` because they regressed from state `2` to 
 state `1` -- instead of remaining in state `2` or even advancing to state `3`. 
 
 
 ## 3. Time of Event
-Since this is longitudinal modeling of disease progression, for each beneficiary, the time of diagnoses of 
+Since this is a longitudinal modeling of disease progression, for each beneficiary, the time of diagnoses of 
 all other condition(s) -- including comorbidities -- is measured relative to the time they were diagnosed with 
 prediabetes. Essentially, we track the duration (in months) from when they were diagnosed of prediabetes to the 
-time of diagnoses of the two other states.
+time of diagnoses of the two other states/comorbidities.
 
 
 ## 4. Comorbidities
-Comorbidities were measured as time dependent, in the sense that they change with time. For example,
+Comorbidities were measured as time dependent, in the sense that they vary with time. For example,
 a beneficiary may not have hypertension at the time of prediabetes diagnoses, but may be diagnosed with it,
-say, 5 months later even when they are still in the prediabetes state or had advanced to a higher state.
+say, 5 months later even when they are still with prediabetes or had advanced to a higher state.
+Also, we limit comorbidities to the same indexing time in order to align all beneficiaries at a 
+comparable starting point, ie., time of first prediabetes diagnosis in 2022.
 
 
 ## 5. Abstract
@@ -60,7 +63,7 @@ to other chronic diseases like stroke or kidney failure. Understanding the vario
 progression is an important step towards policy implementation to mitigate its effects. In this study, we employ a 
 data-driven approach to examine the longitudinal paths of diabetes progression among Medicare members. We will 
 analyze synthetic claims data obtained from the Centers for Medicare and Medicaid Services (CMS) from 2022 
-through 2025 for a cohort of 1821 prediabetes patients diagnosed of prediabetes in 2022 and followed up for their 
+through 2025 for a cohort of 3172 prediabetes patients diagnosed of prediabetes in 2022 and followed up for their 
 transition to diabetes with(out) complications. Transitions between specific states will be modeled using 
 Cox proportional hazards model incorporating demographic factors and other comorbidities. Furthermore, a subgroup 
 analysis will be performed to delineate differences in progression by sex and specific age categories.
