@@ -1,9 +1,16 @@
 ---
-title: "Transform Data"
+title: 'Transform Data'
 author: ""
-date: "`r Sys.Date()`"
-output: html_document
+date: ""
+output:
+  html_document:
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+classoption: landscape
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
@@ -14,6 +21,7 @@ library(tidyr)
 library(purrr)
 ```
 
+We transform the data to reflect the desired structure for modeling.
 
 
 ```{r}
@@ -37,7 +45,7 @@ other_diagnoses_data <- diabetes_full %>%
   select(-STATE) %>%
   pivot_wider(names_from = CCSR_CATEGORY_DESCRIPTION, values_from = status)
 
-head(other_diagnoses_data)
+other_diagnoses_data
 ```
 
 
@@ -52,7 +60,7 @@ diabetes_only_data <- diabetes_full %>%
   select(-CCSR_CATEGORY_DESCRIPTION) %>%
   arrange(desc(BENE_ID), TIME_SINCE_PREDIAB) 
 
-head(diabetes_only_data)
+diabetes_only_data
 ```
 
 
@@ -63,8 +71,7 @@ diabetes_transformed <- full_join(
   mutate(STATE = ifelse(is.na(STATE), 0, STATE)) %>%
   arrange(desc(BENE_ID), TIME_SINCE_PREDIAB)
 
-head(diabetes_transformed)
-nrow(diabetes_transformed)
+diabetes_transformed
 ```
 
 
@@ -88,7 +95,7 @@ update_state_iteratively <- function(data) {
 }
 
 diabetes_transformed <- update_state_iteratively(diabetes_transformed)
-head(diabetes_transformed, 10)
+diabetes_transformed
 ```
 
 
@@ -120,7 +127,7 @@ diabetes_transformed <- update_diagnoses_iteratively(diabetes_transformed, other
 
 # filter out STATE=0
 diabetes_transformed <- diabetes_transformed %>% filter(STATE != 0)
-head(diabetes_transformed, 10)
+diabetes_transformed
 ```
 
 
@@ -131,14 +138,14 @@ enrollment_diab <- read.csv("/Users/benabijah/Downloads/enrollment_cohort.csv", 
   mutate(BENE_ID = as.character(BENE_ID))
 
 diabetes_transformed <- left_join(diabetes_transformed, enrollment_diab, by = c("BENE_ID"))
-head(diabetes_transformed, 10)
+diabetes_transformed
 ```
 
 
 
 ```{r}
 write.csv(diabetes_transformed, "~/Library/CloudStorage/Dropbox/Projects/EHR/diab_cohort.csv", row.names = FALSE)
-saveRDS(diabetes_transformed, file="~/Library/CloudStorage/Dropbox/Projects/EHR/diab_cohort")
+saveRDS(diabetes_transformed, file="~/Library/CloudStorage/Dropbox/Projects/EHR/diab_cohort.rds")
 ```
 
 
