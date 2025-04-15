@@ -130,11 +130,13 @@ model <- msm(
     `Depressive or anxiety disorders` + SEX_IDENT_CD + BENE_RACE_CD + AGE_CALC,
   method = "BFGS"
 )
+
+pmatrix.msm(model, t=5)
 ```
 
 
 
-* Obtain transition probabilities for selected months
+* Obtain transition probabilities for first 12 months and other later months
 
 ```{r}
 times <- c(1:12, seq(15, max(data$TIME_SINCE_PREDIAB)+3, 3))
@@ -144,7 +146,7 @@ transition_state1 <- transition_state2 <- c()
 
 for (tm in times) {
   transition_state1 <- rbind(transition_state1, as.vector(pmatrix.msm(model, t = tm)[1,]))
-  transition_state2 <- rbind(transition_state2, as.vector(pmatrix.msm(model, t = tm)[1,2:3]))
+  transition_state2 <- rbind(transition_state2, as.vector(pmatrix.msm(model, t = tm)[2,2:3]))
 }
 
 colnames(transition_state1) <- c("State 1","State 2","State 3")
@@ -175,6 +177,7 @@ tbl2 <- as.data.frame(transition_state2) %>%
 
 tbl2
 ```
+
 
 
 
