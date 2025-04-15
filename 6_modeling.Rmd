@@ -101,8 +101,9 @@ combined_plot
 ```
 
 
+## Multi-state Modeling
 
-## Transition Probabilities
+### Transition Probabilities
 
 * Here, we estimate transition probabilities; the probability of being in a future state (or remain in same state) at given times, given that the patient was in that starting state.
 
