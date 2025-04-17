@@ -28,7 +28,8 @@ library(msm)
 
 
 ```{r}
-data <- readRDS(file=here("diab_cohort.rds"))
+#data <- readRDS(file=here("diab_cohort.rds"))
+data <- readRDS(file="/Users/babijah/Downloads/diab_cohort.rds")
 data
 ```
 
@@ -54,9 +55,9 @@ survival_1 <- data %>%
     start_time = TIME_SINCE_PREDIAB[which(STATE == 1)[1]],
     next_time = TIME_SINCE_PREDIAB[which(STATE %in% c(2, 3))[1]],
     next_state = STATE[which(STATE %in% c(2, 3))[which(STATE %in% c(2, 3)) > which(STATE == 1)[1]][1]]) %>%
-  mutate(
-    time_to_event = next_time - start_time,
-    event = ifelse(!is.na(next_state), 1, 0)) %>%
+  mutate(time_to_event = next_time - start_time,
+         event = ifelse(!is.na(next_state), 1, 0)) %>%
+  mutate(time_to_event = ifelse(is.na(time_to_event), max(time_to_event, na.rm=TRUE), time_to_event)) %>%
   arrange(desc(BENE_ID))
 
 survival_1
@@ -76,10 +77,10 @@ survival_2 <- data %>%
     start_time = TIME_SINCE_PREDIAB[which(STATE == 2)[1]],
     next_time = TIME_SINCE_PREDIAB[which(STATE == 3)[1]],
     next_state = STATE[which(STATE == 3)[which(STATE == 3) > which(STATE == 2)[1]][1]]) %>%
-  mutate(
-    time_to_event = next_time - start_time,
-    event = ifelse(!is.na(next_state), 1, 0)) %>%
+  mutate(time_to_event = next_time - start_time,
+         event = ifelse(!is.na(next_state), 1, 0)) %>%
   filter(!is.na(start_time)) %>% #filter out patients who never entered state 2
+  mutate(time_to_event = ifelse(is.na(time_to_event), max(time_to_event, na.rm=TRUE), time_to_event)) %>%
   arrange(desc(BENE_ID))
 
 survival_2
@@ -91,10 +92,15 @@ survival_2
 km_1 <- survfit(Surv(time_to_event, event) ~ 1, data = survival_1)
 km_2 <- survfit(Surv(time_to_event, event) ~ 1, data = survival_2)
 
-kmplot_1 <- ggsurvplot(km_1, conf.int = TRUE, surv.median.line = "hv", xlab = "Time (months)")$plot + 
-  theme(legend.position = "none")
-kmplot_2 <- ggsurvplot(km_2, conf.int = TRUE, surv.median.line = "hv", xlab = "Time (months)")$plot + 
-  theme(legend.position = "none")
+kmplot_1 <- ggsurvplot(
+  km_1, conf.int = TRUE, surv.median.line = "hv", xlab = "Time (months)")$plot + 
+  theme(legend.position = "none") +
+  scale_y_continuous(limits = c(0.55, 1))
+
+kmplot_2 <- ggsurvplot(
+  km_2, conf.int = TRUE, surv.median.line = "hv", xlab = "Time (months)")$plot + 
+  theme(legend.position = "none") +
+  scale_y_continuous(limits = c(0.55, 1))
 
 combined_plot <- plot_grid(kmplot_1, kmplot_2, labels = c("A", "B"), ncol = 2)
 combined_plot
@@ -121,10 +127,8 @@ Q <- rbind(c(0, 0.1, 0.1), # 1 to 2/3
            c(0, 0,   0)) # 3 (absorbing state)
 
 model <- msm(
-  STATE ~ TIME_SINCE_PREDIAB,
-  subject = BENE_ID,
-  data = data,
-  qmatrix = Q,
+  STATE ~ TIME_SINCE_PREDIAB, subject = BENE_ID,
+  data = data, qmatrix = Q,
   covariates = ~ Obesity + `Socioeconomic or lifestyle factors` + Hypertension +
     `Heart disease or failure` +  `Sleep wake disorders` + `Alcohol-related disorders` +
     `Depressive or anxiety disorders` + SEX_IDENT_CD + BENE_RACE_CD + AGE_CALC,
@@ -160,8 +164,7 @@ tbl1 <- as.data.frame(transition_state1) %>%
   gt() %>%
   tab_source_note(md("Abbreviations: State 1 = Prediabetes, 
                      State 2 = Diabetes mellitus without complication,
-                     State 3 = Diabetes mellitus with complication")
-                  ) %>%
+                     State 3 = Diabetes mellitus with complication")) %>%
   tab_header(md("**Transition Probabilities from Prediabetes**"))
 
 tbl1
@@ -171,8 +174,7 @@ tbl2 <- as.data.frame(transition_state2) %>%
   gt()%>%
   tab_source_note(md("Abbreviations: State 1 = Prediabetes, 
                      State 2 = Diabetes mellitus without complication,
-                     State 3 = Diabetes mellitus with complication")
-                  ) %>%
+                     State 3 = Diabetes mellitus with complication")) %>%
   tab_header(md("**Transition Probabilities from Diabetes without Complications**"))
 
 tbl2
