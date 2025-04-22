@@ -63,10 +63,10 @@ to other chronic diseases like stroke or kidney failure. Understanding the vario
 progression is an important step towards policy implementation to mitigate its effects. In this study, we employ a 
 data-driven approach to examine the longitudinal paths of diabetes progression among Medicare members. We will 
 analyze synthetic claims data obtained from the Centers for Medicare and Medicaid Services (CMS) from 2022 
-through 2025 for a cohort of 3172 prediabetes patients diagnosed of prediabetes in 2022 and followed up for their 
-transition to diabetes with(out) complications. Transitions between specific states will be modeled using 
-Cox proportional hazards model incorporating demographic factors and other comorbidities. Furthermore, a subgroup 
-analysis will be performed to delineate differences in progression by sex and specific age categories.
+through 2025 for a cohort of 3,172 prediabetes patients diagnosed of prediabetes in 2022 and followed up for their 
+transition to diabetes with(out) complications. Transitions between specific states is modeled using 
+continuous-time multi-state models incorporating demographic factors and other comorbidities. Furthermore, we
+conduct subgroup analysis to delineate differences in progression by sex and specific age categories.
 
 **Keywords**: *Medicare claims, diabetes, disease progression, survival analysis, multistate models*
 
