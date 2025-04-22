@@ -23,13 +23,13 @@ library(survminer)
 library(cowplot)
 library(gt)
 library(msm)
+library(ggplot2)
 ```
 
 
 
 ```{r}
-#data <- readRDS(file=here("diab_cohort.rds"))
-data <- readRDS(file="/Users/babijah/Downloads/diab_cohort.rds")
+data <- readRDS(file=here("diab_cohort.rds"))
 data
 ```
 
@@ -93,12 +93,12 @@ km_1 <- survfit(Surv(time_to_event, event) ~ 1, data = survival_1)
 km_2 <- survfit(Surv(time_to_event, event) ~ 1, data = survival_2)
 
 kmplot_1 <- ggsurvplot(
-  km_1, conf.int = TRUE, surv.median.line = "hv", xlab = "Time (months)")$plot + 
+  km_1, conf.int = TRUE, surv.median.line = "hv", xlab = "Months since Prediabetes")$plot + 
   theme(legend.position = "none") +
   scale_y_continuous(limits = c(0.55, 1))
 
 kmplot_2 <- ggsurvplot(
-  km_2, conf.int = TRUE, surv.median.line = "hv", xlab = "Time (months)")$plot + 
+  km_2, conf.int = TRUE, surv.median.line = "hv", xlab = "Months since Diabetes wo-comp.")$plot + 
   theme(legend.position = "none") +
   scale_y_continuous(limits = c(0.55, 1))
 
@@ -132,8 +132,7 @@ model <- msm(
   covariates = ~ Obesity + `Socioeconomic or lifestyle factors` + Hypertension +
     `Heart disease or failure` +  `Sleep wake disorders` + `Alcohol-related disorders` +
     `Depressive or anxiety disorders` + SEX_IDENT_CD + BENE_RACE_CD + AGE_CALC,
-  method = "BFGS"
-)
+  method = "BFGS")
 
 pmatrix.msm(model, t=5)
 ```
@@ -141,9 +140,10 @@ pmatrix.msm(model, t=5)
 
 
 * Obtain transition probabilities for first 12 months and other later months
+* These probabilities are constrained on all other covariates being unobserved, eg., `Obesity=0`, `Socioeconomic or lifestyle factors=0`,etc.
 
 ```{r}
-times <- c(1:12, seq(15, max(data$TIME_SINCE_PREDIAB)+3, 3))
+times <- c(0:12, seq(15, max(data$TIME_SINCE_PREDIAB)+3, 3))
 
 # transition probabilities
 transition_state1 <- transition_state2 <- c()
@@ -159,7 +159,8 @@ rownames(transition_state1) <- rownames(transition_state2) <- times
 #transition_state1
 #transition_state2
 
-tbl1 <- as.data.frame(transition_state1) %>%
+tbl1 <- round(transition_state1, 3) %>%
+  as.data.frame() %>%
   rownames_to_column(var = "Time (months)") %>%
   gt() %>%
   tab_source_note(md("Abbreviations: State 1 = Prediabetes, 
@@ -169,7 +170,8 @@ tbl1 <- as.data.frame(transition_state1) %>%
 
 tbl1
 
-tbl2 <- as.data.frame(transition_state2) %>%
+tbl2 <- round(transition_state2, 3) %>% 
+  as.data.frame(transition_state2) %>%
   rownames_to_column(var = "Time (months)") %>%
   gt()%>%
   tab_source_note(md("Abbreviations: State 1 = Prediabetes, 
@@ -182,8 +184,169 @@ tbl2
 
 
 
+```{r}
+# transition probability curves
+transition_state1_curve <- as.data.frame(transition_state1) %>%
+  rownames_to_column(var = "time") %>%
+  mutate(trns_from = "State 1")
 
-### Covariate Effects between Diabetes States
+transition_state2_curve <- as.data.frame(transition_state2) %>%
+  rownames_to_column(var = "time") %>%
+  mutate(`State 1` = NA, trns_from = "State 2") %>%
+  select(time, `State 1`, `State 2`, `State 3`, trns_from) 
+
+transition_curve <- rbind(transition_state1_curve, transition_state2_curve) %>%
+  mutate(time = as.numeric(time)) %>%
+  pivot_longer(cols = starts_with("State"), names_to = "State", values_to = "prob") %>%
+  mutate(State = stringr::str_sub(State, 7)) %>%
+  ggplot(., aes(x = time, y = prob, color = State)) +
+  geom_line() +
+  facet_wrap(trns_from ~., nrow = 1) +
+  labs(x="Time (months)", y="Probability", title="Transition Probabilities Over Time") +
+  theme_pubr()
+
+transition_curve
+```
+
+
+
+### Covariate Effects across Diabetes States
+
+```{r}
+# get HRs and CIs
+hrs <- hazard.msm(model)
+hrs$Obesity
+
+## just a little function to summarize HR output into format: HR (L, U)
+# hr_format <- function(covariate) {
+#   apply(covariate, 1, function(x) {
+#     x = round(x, 3); return(paste0(x[1], " (", x[2], ", ", x[3], ")"))})}
+
+hr_format <- function(covariate) {
+  apply(covariate, 1, function(x, M=1e+6) {
+    x <- round(x, 3)
+    if (x[3] < M) {return(paste0(x[1], " (", x[2], ", ", x[3], ")"))}
+    else {return(paste0(x[1], " (", x[2], ", ", Inf, ")"))}
+    })}
+
+hrs <- lapply(hrs, hr_format)
+hr_summary <- do.call(rbind, hrs)
+colnames(hr_summary) <- c("1-2","1-3","2-3")
+rownames(hr_summary) <- c(names(data)[4:10], "Sex", "Race", "Age (years)")
+
+hr_summary <- as.data.frame(hr_summary) %>%
+  rownames_to_column(var = "Covariate") %>%
+  gt()%>%
+  tab_source_note(md("1 = Prediabetes, 
+                     2 = Diabetes mellitus without complication,
+                     3 = Diabetes mellitus with complication")) %>%
+  tab_header(md("**Estimated Effect per Transition**"))
+
+hr_summary
+```
+
+
+
+## Subgroup Analysis: MSM
+
+### Sex
+* Let's compare sex-adjusted transition probabilities between the two sexes.
+* To explore this transition dynamics, we refit separate MSM for each sex group
+
+```{r}
+table(data$SEX_IDENT_CD)
+```
+
+
+```{r}
+# separate msm for males vs females
+model_male <- msm(
+  STATE ~ TIME_SINCE_PREDIAB, subject = BENE_ID,
+  data = subset(data, SEX_IDENT_CD==1), qmatrix = Q,
+  covariates = ~ Obesity + `Socioeconomic or lifestyle factors` + Hypertension +
+    `Heart disease or failure` +  `Sleep wake disorders` + `Alcohol-related disorders` +
+    `Depressive or anxiety disorders` + BENE_RACE_CD + AGE_CALC,
+  method = "BFGS")
+
+model_female <- msm(
+  STATE ~ TIME_SINCE_PREDIAB, subject = BENE_ID,
+  data = subset(data, SEX_IDENT_CD==2), qmatrix = Q,
+  covariates = ~ Obesity + `Socioeconomic or lifestyle factors` + Hypertension +
+    `Heart disease or failure` +  `Sleep wake disorders` + `Alcohol-related disorders` +
+    `Depressive or anxiety disorders` + BENE_RACE_CD + AGE_CALC,
+  method = "BFGS")
+
+hrs_male <- hazard.msm(model_male); hrs_male <- lapply(hrs_male, hr_format)
+hrs_female <- hazard.msm(model_female); hrs_female <- lapply(hrs_female, hr_format)
+
+hrs_male_summary <- do.call(rbind, hrs_male)
+hrs_female_summary <- do.call(rbind, hrs_female)
+colnames(hrs_male_summary) <- colnames(hrs_female_summary) <- c("1-2","1-3","2-3")
+rownames(hrs_male_summary) <- rownames(hrs_female_summary) <- c(names(data)[4:10], "Race", "Age (years)")
+
+# print summary
+hrs_male_summary <- as.data.frame(hrs_male_summary) %>%
+  rownames_to_column(var = "Covariate") %>% gt()%>%
+  tab_source_note(md("1 = Prediabetes, 
+                     2 = Diabetes mellitus without complication,
+                     3 = Diabetes mellitus with complication")) %>%
+  tab_header(md("**Estimated Effect per Transition: Males**"))
+
+hrs_female_summary <- as.data.frame(hrs_female_summary) %>%
+  rownames_to_column(var = "Covariate") %>% gt()%>%
+  tab_source_note(md("1 = Prediabetes, 
+                     2 = Diabetes mellitus without complication,
+                     3 = Diabetes mellitus with complication")) %>%
+  tab_header(md("**Estimated Effect per Transition: Females**"))
+
+hrs_male_summary
+hrs_female_summary
+```
+
+
+
+```{r}
+# transition probabilities
+transition_state1_m <- transition_state2_m <- transition_state1_f <- transition_state2_f <- c()
+
+for (tm in times) {
+  transition_state1_m <- rbind(transition_state1_m, as.vector(pmatrix.msm(model_male, t = tm)[1,]))
+  transition_state2_m <- rbind(transition_state2_m, as.vector(pmatrix.msm(model_male, t = tm)[2,2:3]))
+  
+  transition_state1_f <- rbind(transition_state1_f, as.vector(pmatrix.msm(model_female, t = tm)[1,]))
+  transition_state2_f <- rbind(transition_state2_f, as.vector(pmatrix.msm(model_female, t = tm)[2,2:3]))
+}
+
+colnames(transition_state1_m) <- colnames(transition_state1_f) <- c("State 1","State 2","State 3")
+colnames(transition_state2_m) <- colnames(transition_state2_f) <- c("State 2","State 3")
+rownames(transition_state1_m) <- rownames(transition_state2_m) <- rownames(transition_state1_f) <- rownames(transition_state2_f) <- times
+
+
+# transition probability curves
+transition_state1_curve <- 
+  rbind(as.data.frame(transition_state1_m) %>% mutate(Sex = "Male") %>% rownames_to_column(var = "time"),
+        as.data.frame(transition_state1_f) %>% mutate(Sex = "Female") %>% rownames_to_column(var = "time")) %>%
+  mutate(trns_from = "State 1")
+
+transition_state2_curve <- 
+  rbind(as.data.frame(transition_state2_m) %>% mutate(Sex = "Male") %>% rownames_to_column(var = "time"),
+        as.data.frame(transition_state2_f) %>% mutate(Sex = "Female") %>% rownames_to_column(var = "time")) %>%
+  mutate(`State 1` = NA, trns_from = "State 2") %>%
+  select(time, `State 1`, `State 2`, `State 3`, Sex, trns_from) 
+
+transition_curve <- rbind(transition_state1_curve, transition_state2_curve) %>%
+  mutate(time = as.numeric(time)) %>%
+  pivot_longer(cols = starts_with("State"), names_to = "State", values_to = "prob") %>%
+  mutate(State = stringr::str_sub(State, 7)) %>%
+  ggplot(., aes(x = time, y = prob, color = State, linetype = Sex)) +
+  geom_line() +
+  facet_wrap(trns_from ~., nrow = 1) +
+  labs(x="Time (months)", y="Probability", title="Sex-Stratified Transition Probability Curves") +
+  theme_pubr()
+
+transition_curve
+```
+
 
 
 
