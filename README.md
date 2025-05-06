@@ -58,16 +58,9 @@ comparable starting point, ie., time of first prediabetes diagnosis in 2022.
 
 
 ## 5. Abstract
-Diabetes is a chronic disease that often progresses from a mild stage to a more complicated one, and eventually 
-to other chronic diseases like stroke or kidney failure. Understanding the various driving factors of this 
-progression is an important step towards policy implementation to mitigate its effects. In this study, we employ a 
-data-driven approach to examine the longitudinal paths of diabetes progression among Medicare members. We will 
-analyze synthetic claims data obtained from the Centers for Medicare and Medicaid Services (CMS) from 2022 
-through 2025 for a cohort of 3,172 prediabetes patients diagnosed of prediabetes in 2022 and followed up for their 
-transition to diabetes with(out) complications. Transitions between specific states is modeled using 
-continuous-time multi-state models incorporating demographic factors and other comorbidities. Furthermore, we
-conduct subgroup analysis to delineate differences in progression by sex and specific age categories.
+Diabetes is a chronic disease that often progresses from a mild stage to a more complicated one. Understanding the various driving factors of this progression is an important step towards policy implementation to mitigate its effects. In this project, we employ a data-driven approach to examine the longitudinal paths of diabetes progression among Medicare members. We analyze synthetic claims data obtained from the Centers for Medicare and Medicaid Services (CMS) from 2022 through 2025 for a cohort of 3,172 prediabetes patients diagnosed of prediabetes in 2022 and followed up for their transition to diabetes mellitus with(out) complications. Transitions between specific states is modeled using continuous-time multi-state models incorporating demographic factors and other comorbidities. Furthermore, we conduct subgroup analysis to delineate differences in progression by sex and specific age categories. Most prediabetic patients develop diabetes with complications without being diagnosed of diabetes without complications. Obesity, hypertension, and heart disease/failure are some of the factors that significantly impact the risk of diabetes progression. Additionally, males and older adults have higher chances of progression than females and younger adults. We observe higher risks for obese females and obese older adults. On the other hand, higher risks are associated with males living with hypertension, heart disease/failure, alcohol disorders, and depressive disorders.
 
-**Keywords**: *Medicare claims, diabetes, disease progression, survival analysis, multistate models*
+
+**Keywords**: *Medicare, diabetes, disease progression, survival analysis, multistate models*
 
 
