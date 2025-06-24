@@ -94,6 +94,8 @@ hrs_female_summary <- as.data.frame(hrs_female_summary) %>%
 
 hrs_male_summary
 hrs_female_summary
+gtsave(data = hrs_male_summary, filename =  "hrs_male_summary.html", path = here::here())
+gtsave(data = hrs_female_summary, filename =  "hrs_female_summary.html", path = here::here())
 ```
 
 
@@ -194,6 +196,8 @@ hrs_old_summary <- as.data.frame(hrs_old_summary) %>%
 
 hrs_yng_summary
 hrs_old_summary
+gtsave(data = hrs_yng_summary, filename =  "hrs_yng_summary.html", path = here::here())
+gtsave(data = hrs_old_summary, filename =  "hrs_old_summary.html", path = here::here())
 ```
 
 
@@ -245,8 +249,11 @@ transition_curve_B <- rbind(transition_state1_curve, transition_state2_curve) %>
 
 ```{r}
 # plot
-combined_plot <- plot_grid(transition_curve_A, transition_curve_B, labels = c("A", "B"), ncol = 1)
-combined_plot
+# combined_plot <- plot_grid(transition_curve_A, transition_curve_B, labels = c("A", "B"), ncol = 1)
+# combined_plot
+
+transition_curve_A
+transition_curve_B
 ```
 
 

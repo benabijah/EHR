@@ -243,6 +243,7 @@ hr_summary <- as.data.frame(hr_summary) %>%
   tab_header(md("**Estimated Effect per Transition**"))
 
 hr_summary
+gtsave(data = hr_summary, filename =  "hr_summary.html", path = here::here())
 ```
 
 
