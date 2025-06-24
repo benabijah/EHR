@@ -19,6 +19,7 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 library(purrr)
+library(here)
 ```
 
 We transform the data to reflect the desired structure for modeling.
@@ -28,6 +29,8 @@ We transform the data to reflect the desired structure for modeling.
 diabetes_full <- read.csv("/Users/benabijah/Downloads/diabetes_cohort.csv", header = T) %>%
   mutate(BENE_ID = as.character(BENE_ID)) %>%
   select(-c(MONTH, YR))
+
+## `diabetes_cohort.csv` is processed data from google-colab notebook `4_cohort_selection.ipynb`
 
 # define the list of other diagnoses
 diab_names <- c("Prediabetes","Diabetes mellitus without complication","Diabetes mellitus with complication")
@@ -134,6 +137,7 @@ diabetes_transformed
 
 ```{r}
 # merge with data from enrollment file
+## `enrollment_cohort.csv` is processed data from google-colab notebook `4_cohort_selection.ipynb`
 enrollment_diab <- read.csv("/Users/benabijah/Downloads/enrollment_cohort.csv", header = T) %>%
   mutate(BENE_ID = as.character(BENE_ID))
 
